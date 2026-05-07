@@ -2,8 +2,8 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Стипендиальный калькулятор</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Стипендиальный калькулятор ЮРГПУ (НПИ)</title>
     <!-- НОВЫЙ VK BRIDGE (вместо старого xd_that.js) -->
     <script src="https://unpkg.com/@vkontakte/vk-bridge@latest/dist/browser.min.js"></script>
     <style>
@@ -12,7 +12,7 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: #f0f2f5;
             padding: 16px;
-            padding-bottom: 100px;
+            padding-bottom: 120px; /* Увеличено, чтобы не перекрывался нижний блок */
         }
         .header { text-align: center; padding: 24px 0 16px; }
         .header h1 { font-size: 20px; margin-bottom: 4px; }
@@ -20,7 +20,8 @@
             background: #fff;
             border-radius: 12px;
             padding: 16px;
-            margin-bottom: 12px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
         .gpa-input {
             width: 100%;
@@ -28,25 +29,37 @@
             border: 2px solid #e1e3e6;
             border-radius: 10px;
             font-size: 18px;
+            margin-top: 8px;
         }
         .section-title {
             font-weight: 700;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
             padding-bottom: 8px;
             border-bottom: 2px solid #f0f2f5;
+            color: #333;
+        }
+        .sub-section-title {
+            font-weight: 600;
+            font-size: 14px;
+            color: #555;
+            margin: 12px 0 8px;
+            padding-left: 4px;
         }
         .row {
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 10px 0;
-            gap: 10px;
+            gap: 8px;
+            border-bottom: 1px solid #f5f5f5;
         }
+        .row:last-child { border-bottom: none; }
         .row-name { font-size: 13px; font-weight: 500; }
         .row-weight { font-size: 12px; color: #818c99; }
         .tapper {
             display: flex;
             align-items: center;
+            flex-shrink: 0;
         }
         .tapper-btn {
             width: 36px;
@@ -55,22 +68,40 @@
             background: #f9f9f9;
             font-size: 20px;
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.1s;
+            color: #333;
         }
+        .tapper-btn:active { background: #e1e3e6; }
         .tapper-minus { border-radius: 8px 0 0 8px; }
         .tapper-plus { border-radius: 0 8px 8px 0; }
         .tapper-value {
-            width: 44px;
+            width: 50px;
             height: 36px;
             text-align: center;
             font-size: 16px;
             border-top: 2px solid #e1e3e6;
             border-bottom: 2px solid #e1e3e6;
+            border-left: none;
+            border-right: none;
+            -moz-appearance: textfield;
+            pointer-events: none; /* Отключаем прямой ввод, оставляем только кнопки */
+            background: #fff;
+        }
+        .tapper-value::-webkit-outer-spin-button,
+        .tapper-value::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
         }
         .row-result {
-            width: 60px;
+            min-width: 60px;
             text-align: right;
             font-weight: 700;
             color: #2688eb;
+            font-size: 16px;
+            flex-shrink: 0;
         }
         .total-block {
             position: fixed;
@@ -80,68 +111,109 @@
             background: #fff;
             padding: 16px;
             box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+            border-top-left-radius: 16px;
+            border-top-right-radius: 16px;
         }
         .total-value {
-            font-size: 36px;
+            font-size: 32px;
             font-weight: 800;
             color: #2688eb;
+            line-height: 1;
         }
         .total-formula { font-size: 11px; color: #818c99; margin-top: 4px; }
+        
+        .disclaimer {
+            font-size: 11px;
+            color: #555;
+            background-color: #fff9e6;
+            border-left: 4px solid #ffcc00;
+            padding: 8px 12px;
+            margin-bottom: 16px;
+            border-radius: 8px;
+            line-height: 1.4;
+        }
+        label { font-weight: 500; font-size: 14px; color: #333; }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>📊 Стипендиальный калькулятор</h1>
-        <p>ИНСЧХОЛ</p>
+        <p style="font-size: 14px; color: #555;">ЮРГПУ (НПИ) им. М.И. Платова</p>
+    </div>
+
+    <!-- Блок с важным уточнением -->
+    <div class="disclaimer">
+        ⚠️ <strong>Внимание!</strong> Данный калькулятор использует предварительные баллы на основе открытых данных из Положения о ПГАС. Все результаты являются ориентировочными и не могут считаться официальными. Для точной информации обращайтесь в деканат или конкурсную комиссию.
     </div>
 
     <div class="gpa-block">
-        <label>Средний балл успеваемости</label>
-        <input type="number" id="gpa" class="gpa-input" value="4.7" min="0" max="5" step="0.01">
+        <label for="gpa">Средний балл успеваемости (GPA)</label>
+        <input type="number" id="gpa" class="gpa-input" value="4.7" min="0" max="5" step="0.01" placeholder="Например, 4.7">
     </div>
 
+    <!-- Раздел: Общественная деятельность (полностью переработан) -->
     <div class="section">
-        <div class="section-title">📋 Участие в событиях</div>
-        <div id="events-rows"></div>
-    </div>
-
-    <div class="section">
-        <div class="section-title">🤝 Волонтёрство</div>
+        <div class="section-title">🤝 Общественная деятельность</div>
+        
+        <!-- Подраздел: Участие в мероприятиях (Участник и Призёр) -->
+        <div class="sub-section-title">📋 Участие в мероприятиях</div>
+        <div id="participation-rows"></div>
+        
+        <!-- Подраздел: Волонтёрская деятельность (Организация/Проведение) -->
+        <div class="sub-section-title" style="margin-top: 16px;">🎖️ Волонтёрская деятельность</div>
         <div id="volunteer-rows"></div>
     </div>
 
+    <!-- Нижний блок с итогом -->
     <div class="total-block">
         <div class="total-value" id="total-score">0</div>
         <div class="total-formula" id="total-formula"></div>
     </div>
 
     <script>
-        // Данные
-        const eventsData = [
-            { name: 'Факультетское / институтское', weight: 0.7, id: 'ev-faculty' },
-            { name: 'Университетское / городское', weight: 1, id: 'ev-city' },
-            { name: 'Региональное / межрегиональное', weight: 5, id: 'ev-region' },
-            { name: 'Всероссийское', weight: 7, id: 'ev-russia' },
-            { name: 'Международное', weight: 8, id: 'ev-world' },
-        ];
-        const volunteerData = [
-            { name: 'Факультетское / институтское', weight: 0.5, id: 'vol-faculty' },
-            { name: 'Университетское / городское', weight: 1, id: 'vol-city' },
-            { name: 'Региональное / межрегиональное', weight: 1.5, id: 'vol-region' },
-            { name: 'Всероссийское', weight: 2, id: 'vol-russia' },
-            { name: 'Международное', weight: 2.5, id: 'vol-world' },
+        // Данные строго по Положению (Раздел 4.3)
+        const participationData = [
+            // name, weight, id
+            { name: 'Факультетское / институтское', weight: 0.3, id: 'part-fac' },
+            { name: 'Университетское / городское', weight: 0.7, id: 'part-uni' },
+            { name: 'Региональное / межрегиональное', weight: 1, id: 'part-reg' },
+            { name: 'Всероссийское', weight: 1.5, id: 'part-rus' },
+            { name: 'Международное', weight: 2, id: 'part-int' },
         ];
 
+        // Данные для "Призёра" (веса из той же таблицы, но для призёра)
+        const prizeData = [
+            { name: 'Факультетское / институтское (призёр)', weight: 0.5, id: 'prize-fac' },
+            { name: 'Университетское / городское (призёр)', weight: 1, id: 'prize-uni' },
+            { name: 'Региональное / межрегиональное (призёр)', weight: 1.5, id: 'prize-reg' },
+            { name: 'Всероссийское (призёр)', weight: 2, id: 'prize-rus' },
+            { name: 'Международное (призёр)', weight: 2.5, id: 'prize-int' },
+        ];
+
+        const volunteerData = [
+            // Критерий 2 из Положения: Волонтёрство
+            { name: 'Факультетское / институтское', weight: 0.5, id: 'vol-fac' },
+            { name: 'Университетское / городское', weight: 1, id: 'vol-uni' },
+            { name: 'Региональное / межрегиональное', weight: 1.5, id: 'vol-reg' },
+            { name: 'Всероссийское', weight: 2, id: 'vol-rus' },
+            { name: 'Международное', weight: 2.5, id: 'vol-int' },
+        ];
+
+        // Объединённый стейт для всех ID
         const state = {};
 
+        // Функция создания строки (универсальная)
         function createRow(item, containerId) {
             const row = document.createElement('div');
             row.className = 'row';
             row.innerHTML = `
-                <div><div class="row-name">${item.name}</div><div class="row-weight">Вес: ×${item.weight}</div></div>
+                <div style="flex-grow: 1;">
+                    <div class="row-name">${item.name}</div>
+                    <div class="row-weight">Вес: ×${item.weight}</div>
+                </div>
                 <div class="tapper">
                     <button class="tapper-btn tapper-minus" data-id="${item.id}">−</button>
-                    <input type="number" class="tapper-value" data-id="${item.id}" value="0" min="0">
+                    <input type="number" class="tapper-value" data-id="${item.id}" value="0" min="0" readonly>
                     <button class="tapper-btn tapper-plus" data-id="${item.id}">+</button>
                 </div>
                 <div class="row-result" data-result="${item.id}">0</div>
@@ -149,82 +221,111 @@
             document.getElementById(containerId).appendChild(row);
         }
 
+        // Обновление результата в строке
         function updateRowResult(id) {
-            const item = [...eventsData, ...volunteerData].find(i => i.id === id);
+            const allItems = [...participationData, ...prizeData, ...volunteerData];
+            const item = allItems.find(i => i.id === id);
+            if (!item) return; // Выходим, если элемент не найден
+            
             const count = state[id] || 0;
             const result = count * item.weight;
             const el = document.querySelector(`[data-result="${id}"]`);
-            if (el) el.textContent = result % 1 === 0 ? result : result.toFixed(1);
+            if (el) {
+                // Форматируем вывод: если целое - без нулей, если дробное - 1 знак после запятой
+                el.textContent = result % 1 === 0 ? result : result.toFixed(1);
+            }
         }
 
+        // Главная функция расчёта
         function calculateTotal() {
             const gpa = parseFloat(document.getElementById('gpa').value) || 0;
-            const coef = (gpa / 5) * 100;
-            let sum = 0;
-            [...eventsData, ...volunteerData].forEach(item => {
-                sum += (state[item.id] || 0) * item.weight;
+            const coefficient = (gpa / 5) * 100;
+            let totalSum = 0;
+
+            const allItems = [...participationData, ...prizeData, ...volunteerData];
+            allItems.forEach(item => {
+                totalSum += (state[item.id] || 0) * item.weight;
             });
-            const total = sum * coef;
-            document.getElementById('total-score').textContent = total % 1 === 0 ? total : total.toFixed(1);
-            document.getElementById('total-formula').textContent = `Сумма (${sum.toFixed(1)}) × (${gpa}/5×100) = ${total.toFixed(1)}`;
+
+            const totalScore = totalSum * coefficient;
+            const formattedSum = totalSum % 1 === 0 ? totalSum : totalSum.toFixed(1);
+            const formattedTotal = totalScore % 1 === 0 ? totalScore : totalScore.toFixed(1);
+
+            document.getElementById('total-score').textContent = formattedTotal;
+            document.getElementById('total-formula').textContent = 
+                `Сумма баллов (${formattedSum}) × Коэфф. успеваемости (${gpa}/5×100) = ${formattedTotal}`;
         }
 
-        function renderRows() {
-            document.getElementById('events-rows').innerHTML = '';
+        // Отрисовка всех строк при загрузке
+        function renderAllRows() {
+            // Очищаем контейнеры
+            document.getElementById('participation-rows').innerHTML = '';
             document.getElementById('volunteer-rows').innerHTML = '';
-            eventsData.forEach(i => createRow(i, 'events-rows'));
+            
+            // Создаём строки для каждого подраздела
+            participationData.forEach(i => createRow(i, 'participation-rows'));
+            prizeData.forEach(i => createRow(i, 'participation-rows'));
             volunteerData.forEach(i => createRow(i, 'volunteer-rows'));
-            document.querySelectorAll('.tapper-value').forEach(input => {
-                const id = input.dataset.id;
-                input.value = state[id] || 0;
+            
+            // Восстанавливаем значения из state и обновляем результаты
+            const allItems = [...participationData, ...prizeData, ...volunteerData];
+            allItems.forEach(item => {
+                const input = document.querySelector(`.tapper-value[data-id="${item.id}"]`);
+                if (input) {
+                    input.value = state[item.id] || 0;
+                }
+                updateRowResult(item.id);
             });
-            [...eventsData, ...volunteerData].forEach(i => updateRowResult(i.id));
+            
             calculateTotal();
         }
 
-        // Обработчики
+        // Делегирование событий для кнопок "+" и "-"
         document.addEventListener('click', (e) => {
             const btn = e.target.closest('.tapper-btn');
             if (!btn) return;
+
             const id = btn.dataset.id;
             const input = document.querySelector(`.tapper-value[data-id="${id}"]`);
-            let val = parseInt(input.value) || 0;
-            if (btn.classList.contains('tapper-plus')) val++;
-            else if (btn.classList.contains('tapper-minus') && val > 0) val--;
-            state[id] = val;
-            input.value = val;
+            if (!input) return;
+
+            let currentValue = parseInt(input.value) || 0;
+
+            if (btn.classList.contains('tapper-plus')) {
+                currentValue++;
+            } else if (btn.classList.contains('tapper-minus') && currentValue > 0) {
+                currentValue--;
+            }
+
+            // Обновляем состояние и интерфейс
+            state[id] = currentValue;
+            input.value = currentValue;
             updateRowResult(id);
             calculateTotal();
         });
 
+        // Обработчик изменения GPA
         document.addEventListener('input', (e) => {
-            if (e.target.classList.contains('tapper-value')) {
-                const id = e.target.dataset.id;
-                let val = parseInt(e.target.value) || 0;
-                if (val < 0) val = 0;
-                state[id] = val;
-                e.target.value = val;
-                updateRowResult(id);
-                calculateTotal();
-            }
             if (e.target.id === 'gpa') {
                 let val = parseFloat(e.target.value);
+                if (isNaN(val)) val = 0;
                 if (val > 5) { val = 5; e.target.value = 5; }
                 if (val < 0) { val = 0; e.target.value = 0; }
                 calculateTotal();
             }
         });
 
-        renderRows();
+        // Инициализация при загрузке страницы
+        renderAllRows();
 
-        // ✅ НОВАЯ ИНИЦИАЛИЗАЦИЯ ЧЕРЕЗ VK BRIDGE
+        // Инициализация VK Mini App
         window.addEventListener('load', function() {
             if (window.vkBridge) {
                 window.vkBridge.send('VKWebAppInit')
                     .then(() => console.log('✅ VK Mini App initialized'))
                     .catch(e => console.error('Init error:', e));
             } else {
-                console.error('vkBridge not loaded');
+                console.warn('vkBridge not loaded — running in browser mode.');
             }
         });
     </script>
