@@ -5,7 +5,7 @@
       "headers": [
         {
           "key": "X-Frame-Options",
-          "value": ""
+          "value": "ALLOW-FROM https://vk.com"
         }
       ]
     }
