@@ -5,7 +5,16 @@
       "headers": [
         {
           "key": "X-Frame-Options",
-          "value": "ALLOW-FROM https://vk.com"
+          "value": "ALLOWALL"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "frame-ancestors https://vk.com https://id.vk.com"
         }
       ]
     }
